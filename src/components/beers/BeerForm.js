@@ -42,6 +42,7 @@ function BeerForm({
   selectedBeer,
   selectedBrewery,
   disableFields,
+  saving,
   ...props
 }) {
   const [beerSchema, setBeerSchema] = useState({});
@@ -72,8 +73,10 @@ function BeerForm({
         onSubmit={onSubmit}
       >
         <div>
-          <button type="submit" className="btn btn-info">
-            {disableFields
+          <button type="submit" className="btn btn-info" disabled={saving}>
+            {saving
+              ? "Saving"
+              : disableFields
               ? "Delete"
               : Object.entries(selectedBeer).length !== 0
               ? "Update"
@@ -103,5 +106,6 @@ BeerForm.propTypes = {
   selectedBrewery: PropTypes.object.isRequired,
   breweries: PropTypes.array.isRequired,
   disableFields: PropTypes.bool.isRequired,
+  saving: PropTypes.bool.isRequired,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(BeerForm);

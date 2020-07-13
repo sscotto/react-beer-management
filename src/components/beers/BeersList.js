@@ -21,13 +21,13 @@ function BeersList({ beers, onEditClick, onDeleteClick }) {
               <td>{i++}</td>
               <td>
                 <img
-                  onClick={() => onEditClick(beer.id)}
+                  onClick={() => onEditClick(beer.slug)}
                   className="beer-list-icon"
                   src="./assets/icons/detail.svg"
                   alt="edit"
                 />{" "}
                 <img
-                  onClick={() => onDeleteClick(beer.id)}
+                  onClick={() => onDeleteClick(beer.slug)}
                   className="beer-list-icon"
                   src="./assets/icons/delete.svg"
                   alt="edit"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import BeerForm from "./BeerForm";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -6,46 +6,76 @@ import * as beerActions from "../../redux/actions/beerActions";
 import PropTypes from "prop-types";
 import { useHistory, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import Spinner from "../common/Spinner";
 
 function ManageBeerPage(props) {
   let history = useHistory();
   let { action } = useParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  function AssignNewId(beers) {
-    let maxId = Math.max(...beers.map((b) => b.id));
-    return ++maxId;
+  useEffect(() => {
+    if (props.beers.length === 0) {
+      props.loadBeers().catch((error) => toast.error(error));
+    } else setIsLoading(false);
+  }, [props.beers, props.breweries]);
+
+  function handleCreateOrUpdate(beer, message) {
+    props
+      .saveOrUpdateBeer(beer)
+      .then(() => {
+        toast.success(message);
+        history.push("/beers");
+      })
+      .catch((error) => {
+        toast.error(error.message);
+        setSaving(false);
+      });
   }
 
   const handleSubmit = (beerForm, action) => {
+    setSaving(true);
     switch (action) {
       case "CREATE":
-        props.createBeer({ id: AssignNewId(props.beers), ...beerForm });
-        toast.success("A new beer has been created!!");
+        handleCreateOrUpdate(beerForm, "A new beer has been created!!");
         break;
       case "UPDATE":
-        props.updateBeer(beerForm);
-        toast.success("A beer has been updated!!");
+        handleCreateOrUpdate(beerForm, "A beer has been updated!!");
         break;
       case "DELETE":
-        props.deleteBeer(beerForm.id);
-        toast.success("A beer has been deleted!!");
+        props
+          .deleteBeer(beerForm.id)
+          .then(() => {
+            toast.success("A beer has been delete!!");
+            history.push("/beers");
+          })
+          .catch((error) => {
+            toast.error(error.message);
+            setSaving(false);
+          });
         break;
     }
-    history.push("/beers");
   };
 
   return (
-    <BeerForm
-      handleSubmit={handleSubmit}
-      selectedBeer={props.beer}
-      selectedBrewery={props.brewery}
-      disableFields={action === "delete"}
-    ></BeerForm>
+    <>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <BeerForm
+          handleSubmit={handleSubmit}
+          selectedBeer={props.beer}
+          selectedBrewery={props.brewery}
+          disableFields={action === "delete"}
+          saving={saving}
+        ></BeerForm>
+      )}
+    </>
   );
 }
 
-export function getBeerById(beers, id) {
-  return beers.find((beer) => beer.id === id) || {};
+export function getBeerBySlug(beers, slug) {
+  return beers.find((beer) => beer.slug === slug) || {};
 }
 
 export function getBreweryById(breweries, id) {
@@ -53,10 +83,10 @@ export function getBreweryById(breweries, id) {
 }
 
 function mapStateToProps(state, ownProps) {
-  const beerId = ownProps.match.params.id;
+  const beerSlug = ownProps.match.params.slug;
   let beer =
-    beerId && state.beers.length > 0
-      ? getBeerById(state.beers, parseInt(beerId))
+    beerSlug && state.beers.length > 0
+      ? getBeerBySlug(state.beers, beerSlug)
       : {};
   const brewery =
     Object.entries(beer).length !== 0 && state.breweries.length > 0
@@ -72,17 +102,21 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    createBeer: bindActionCreators(beerActions.createBeer, dispatch),
-    updateBeer: bindActionCreators(beerActions.updateBeer, dispatch),
+    saveOrUpdateBeer: bindActionCreators(
+      beerActions.saveOrUpdateBeer,
+      dispatch
+    ),
     deleteBeer: bindActionCreators(beerActions.deleteBeer, dispatch),
+    loadBeers: bindActionCreators(beerActions.loadBeers, dispatch),
   };
 }
 
 ManageBeerPage.propTypes = {
-  createBeer: PropTypes.func.isRequired,
-  updateBeer: PropTypes.func.isRequired,
+  saveOrUpdateBeer: PropTypes.func.isRequired,
   deleteBeer: PropTypes.func.isRequired,
+  loadBeers: PropTypes.func.isRequired,
   beers: PropTypes.array.isRequired,
+  breweries: PropTypes.array.isRequired,
   beer: PropTypes.object.isRequired,
   brewery: PropTypes.object.isRequired,
 };
