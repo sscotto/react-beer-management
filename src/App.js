@@ -19,10 +19,10 @@ function App() {
         <Route exact path="/beers" component={BeersCatalogPage}></Route>
         <Route
           exact
-          path="/beer/:id/:action"
+          path="/beer/:slug/:action"
           component={ManageBeerPage}
         ></Route>
-        <Route exact path="/beer/:id" component={ManageBeerPage}></Route>
+        <Route exact path="/beer/:slug" component={ManageBeerPage}></Route>
         <Route exact path="/beer" component={ManageBeerPage}></Route>
         <Route exact path="/about" component={AboutPage}></Route>
         <Route path="*" component={PageNotFound} />

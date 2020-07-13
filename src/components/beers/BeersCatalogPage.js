@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -6,22 +6,31 @@ import * as beerActions from "../../redux/actions/beerActions";
 import * as breweryActions from "../../redux/actions/breweryActions";
 import BeersList from "./BeersList";
 import { Redirect } from "react-router-dom";
+import { toast } from "react-toastify";
+import Spinner from "../common/Spinner";
 
 function BeersCatalogPage(props) {
   const [redirectToManageBeerPage, setRedirectToManageBeerPage] = useState(
     false
   );
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [editBeerId, setEditBeerId] = useState(0);
-  const [deleteBeerId, setDeleteBeerId] = useState(0);
+  useEffect(() => {
+    if (props.beers.length === 0) {
+      props.loadBeers().catch((error) => toast.error(error));
+    } else setIsLoading(false);
+  }, [props.beers]);
 
-  const handleEdit = (beerId) => {
-    setEditBeerId(beerId);
+  const [editBeerSlug, setEditBeerSlug] = useState("");
+  const [deleteBeerSlug, setDeleteBeerSlug] = useState("");
+
+  const handleEdit = (beerSlug) => {
+    setEditBeerSlug(beerSlug);
     setRedirectToManageBeerPage(true);
   };
 
-  const handleDelete = (beerId) => {
-    setDeleteBeerId(beerId);
+  const handleDelete = (beerSlug) => {
+    setDeleteBeerSlug(beerSlug);
     setRedirectToManageBeerPage(true);
   };
 
@@ -30,26 +39,33 @@ function BeersCatalogPage(props) {
       {redirectToManageBeerPage && (
         <Redirect
           to={
-            editBeerId !== 0
-              ? "/beer/" + editBeerId
-              : deleteBeerId !== 0
-              ? "/beer/" + deleteBeerId + "/delete"
+            editBeerSlug !== ""
+              ? "/beer/" + editBeerSlug
+              : deleteBeerSlug !== ""
+              ? "/beer/" + deleteBeerSlug + "/delete"
               : "/beer"
           }
         />
       )}
-      <button
-        className="btn btn-info"
-        style={{ marginBottom: 5 }}
-        onClick={() => setRedirectToManageBeerPage(true)}
-      >
-        Add Beer
-      </button>
-      <BeersList
-        beers={props.beers}
-        onEditClick={handleEdit}
-        onDeleteClick={handleDelete}
-      ></BeersList>
+
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <button
+            className="btn btn-info"
+            style={{ marginBottom: 5 }}
+            onClick={() => setRedirectToManageBeerPage(true)}
+          >
+            Add Beer
+          </button>
+          <BeersList
+            beers={props.beers}
+            onEditClick={handleEdit}
+            onDeleteClick={handleDelete}
+          ></BeersList>{" "}
+        </>
+      )}
     </>
   );
 }

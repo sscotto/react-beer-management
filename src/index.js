@@ -10,7 +10,7 @@ import { Provider as ReduxProvider } from "react-redux";
 import * as initialStore from "./redux/initialBeers";
 
 const store = configureStore({
-  beers: initialStore.initialBeers,
+  //beers: initialStore.initialBeers,
   breweries: initialStore.initialBreweries,
 });
 
